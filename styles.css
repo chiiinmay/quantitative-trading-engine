@@ -549,3 +549,94 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-muted);
 }
+
+/* Research Notes Academic Captions */
+.metric-research-note {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    line-height: 1.25;
+    margin-top: 0.4rem;
+    display: block;
+}
+
+/* Institutional Methodology Section */
+.methodology-container {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.methodology-header {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.methodology-header h3 {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+
+.methodology-header span {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+}
+
+.methodology-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+    .methodology-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+}
+
+.methodology-col h5 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.methodology-col p {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    line-height: 1.45;
+}
+
+.methodology-col ul {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 0.4rem;
+}
+
+.methodology-col li {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-bottom: 0.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.methodology-col li::before {
+    content: '▪';
+    color: var(--accent);
+    font-size: 0.5rem;
+}

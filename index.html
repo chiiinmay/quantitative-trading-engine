@@ -198,21 +198,25 @@
                         <div class="metric-label">Annualized Return (CAGR)</div>
                         <div class="metric-value font-mono" id="metric-cagr">--%</div>
                         <div class="metric-comparison" id="cagr-benchmark-comp">vs. Benchmark: --%</div>
+                        <span class="metric-research-note">Compounded Annual Growth Rate (Geometric mean rate of return over continuous temporal horizon)</span>
                     </div>
                     <div class="metric-card">
                         <div class="metric-label">Risk-Adjusted Sharpe Ratio</div>
                         <div class="metric-value font-mono" id="metric-sharpe">--</div>
                         <div class="metric-comparison" id="sharpe-benchmark-comp">Benchmark: --</div>
+                        <span class="metric-research-note">Annualized risk-adjusted excess return per unit of standard deviation ($R_f=2.0\%$)</span>
                     </div>
                     <div class="metric-card">
                         <div class="metric-label">Downside Sortino Ratio</div>
                         <div class="metric-value font-mono" id="metric-sortino">--</div>
                         <div class="metric-comparison" id="sortino-vol-comp">Ann. Volatility: --%</div>
+                        <span class="metric-research-note">Evaluates downside deviation focusing exclusively on negative return variance</span>
                     </div>
                     <div class="metric-card">
                         <div class="metric-label">Maximum Portfolio Drawdown</div>
                         <div class="metric-value font-mono" id="metric-maxdd">--%</div>
                         <div class="metric-comparison" id="maxdd-duration-comp">MaxDD Duration: -- days</div>
+                        <span class="metric-research-note">Peak-to-trough paper loss experienced by the equity curve before recovery</span>
                     </div>
                 </div>
 
@@ -220,10 +224,12 @@
                     <div class="metric-card padding-sm">
                         <div class="metric-label">Alpha (Benchmark-Adjusted Excess)</div>
                         <div class="metric-value font-mono text-sm" id="metric-alpha">--%</div>
+                        <span class="metric-research-note">Jensen's Alpha: Idiosyncratic portfolio excess return after beta risk-adjustment</span>
                     </div>
                     <div class="metric-card padding-sm">
                         <div class="metric-label">Systemic Market Beta (Covariance)</div>
                         <div class="metric-value font-mono text-sm" id="metric-beta">--</div>
+                        <span class="metric-research-note">Portfolio covariance relative to market benchmark variance</span>
                     </div>
                 </div>
 
@@ -248,6 +254,43 @@
                     <!-- Performance Comparison Curve -->
                     <div id="equity-chart-wrapper" style="position: relative; height: 350px; width: 100%;">
                         <canvas id="equity-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- PLATFORM METHODOLOGY & ANALYTICAL SPECIFICATIONS -->
+                <div class="methodology-container">
+                    <div class="methodology-header">
+                        <h3>Systematic Research Methodology & Analytical Assumptions</h3>
+                        <span>DOCUMENTATION REF: D&A-QSRB-001</span>
+                    </div>
+                    <div class="methodology-grid">
+                        <div class="methodology-col">
+                            <h5>1. Model Validation & Overfitting Prevention</h5>
+                            <p>To eliminate selection bias and optimize statistical significance, the framework enforces a rigid, chronological sequence split:</p>
+                            <ul>
+                                <li><strong>In-Sample Training (IS):</strong> Strategy parameters are swept, evaluated, and optimized exclusively on the first 70% of the dataset.</li>
+                                <li><strong>Out-of-Sample Validation (OOS):</strong> Selected optimal coordinates are run on the remaining 30% of "unseen" historical data to detect performance decay.</li>
+                                <li><strong>Rolling Walk-Forward Loop:</strong> Adapts to regimes by training on a sliding 252-day window and applying optimal parameters to the subsequent 63-day segment.</li>
+                            </ul>
+                        </div>
+                        <div class="methodology-col">
+                            <h5>2. Stochastic Tail-Risk & Ruin Calculations</h5>
+                            <p>Daily return variance is modeled dynamically without assuming standard parametric normality:</p>
+                            <ul>
+                                <li><strong>Bootstrapped Monte Carlo:</strong> Simulates 100+ randomized forward return paths based on resampled historical trade distributions.</li>
+                                <li><strong>Probability of Ruin:</strong> Evaluates the percentage of randomized paths experiencing a peak-to-trough paper loss exceeding a 25.0% threshold.</li>
+                                <li><strong>Semi-Deviation Sortino:</strong> Isolates negative return segments to measure risk relative to harmful downside fluctuations.</li>
+                            </ul>
+                        </div>
+                        <div class="methodology-col">
+                            <h5>3. Execution Friction & Market Limitations</h5>
+                            <p>To ensure empirical integrity, the backtester incorporates realistic trading costs and systemic limitations:</p>
+                            <ul>
+                                <li><strong>Commission Modeling:</strong> Integrates a static commission charge (defaults to 10 bps per trade transaction).</li>
+                                <li><strong>Execution Slippage:</strong> Deducts a percentage drag (defaults to 0.05%) from entry/exit close prices to model order book spreads.</li>
+                                <li><strong>Sampling Resolution:</strong> Uses daily OHLCV bars. High-frequency microstructural impacts, market-impact decay, and borrow fees are omitted.</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
