@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantitative Strategy Research & Backtesting Platform</title>
+    <!-- Google Fonts for professional monospaced and sans typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Vanilla CSS stylesheet reference -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- TradingView Lightweight Charts (Professional Finance Candlestick Visualization) -->
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <!-- Chart.js (High-Density plots for Heatmaps, Monte Carlo, and Equity Timelines) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-logo">
+            <span class="logo-text">QSR&B</span>
+            <span class="logo-subtext">Quantitative Strategy Research & Backtesting Platform</span>
+        </div>
+        <div class="header-status" id="data-status">
+            <span class="status-indicator yellow"></span>
+            <span class="status-text">Loading Data Pipeline...</span>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <!-- Control Sidebar for Signal and Portfolio parameters -->
+        <aside class="control-sidebar">
+            <section class="control-section">
+                <h3>Data Ingestion Pipe</h3>
+                <div class="control-group">
+                    <label for="asset-source">Historical Dataset</label>
+                    <select id="asset-source">
+                        <option value="SPY">S&P 500 ETF (SPY) [Preloaded Benchmark]</option>
+                        <option value="AAPL">Apple Inc. (AAPL) [Preloaded Equity]</option>
+                        <option value="TSLA">Tesla Inc. (TSLA) [Preloaded Volatile Equity]</option>
+                        <option value="BTCUSDT">Bitcoin (BTC/USDT) [Preloaded Crypto]</option>
+                        <option value="BINANCE_LIVE">Live Binance Crypto Feed</option>
+                        <option value="CSV_UPLOAD">Local CSV Dataset Ingestion</option>
+                    </select>
+                </div>
+
+                <div class="control-group hidden" id="binance-options">
+                    <label for="binance-symbol">Crypto Pair Symbol</label>
+                    <input type="text" id="binance-symbol" value="BTCUSDT" placeholder="e.g. ETHUSDT, SOLUSDT">
+                    <label for="binance-interval">Interval</label>
+                    <select id="binance-interval">
+                        <option value="1d">Daily (1d)</option>
+                        <option value="1h">Hourly (1h)</option>
+                    </select>
+                </div>
+
+                <div class="control-group hidden" id="csv-upload-options">
+                    <label for="csv-file" class="file-upload-label">Drag & Drop or Choose CSV File</label>
+                    <input type="file" id="csv-file" accept=".csv">
+                    <small class="help-text">Must contain Date, Open, High, Low, Close, Volume</small>
+                </div>
+            </section>
+
+            <section class="control-section">
+                <h3>Validation & Friction Parameters</h3>
+                <div class="control-group">
+                    <label for="initial-capital">Initial Capital ($)</label>
+                    <input type="number" id="initial-capital" value="100000" min="1000">
+                </div>
+                <div class="control-group">
+                    <label for="commission-bps">Transaction Cost (bps)</label>
+                    <input type="number" id="commission-bps" value="10" min="0" max="100" step="1">
+                    <small class="help-text">1 basis point = 0.01% of trade value</small>
+                </div>
+                <div class="control-group">
+                    <label for="slippage-pct">Slippage Tolerance (%)</label>
+                    <input type="number" id="slippage-pct" value="0.05" min="0" max="1" step="0.01">
+                </div>
+                <div class="control-group">
+                    <label for="oos-split">In-Sample Data Split (%)</label>
+                    <input type="range" id="oos-split" min="50" max="90" value="70">
+                    <div class="range-value"><span id="oos-split-val">70</span>% In-Sample / <span id="oos-val">30</span>% Out-of-Sample</div>
+                </div>
+            </section>
+
+            <section class="control-section">
+                <h3>Signal Generation Logic</h3>
+                <div class="control-group">
+                    <label for="strategy-selector">Core Strategy Model</label>
+                    <select id="strategy-selector">
+                        <option value="MA_CROSSOVER">Moving Average Crossover (Trend Following)</option>
+                        <option value="RSI_REVERSION">RSI Mean Reversion (Oscillator)</option>
+                        <option value="MOMENTUM_ROC">Momentum Rate of Change (ROC)</option>
+                        <option value="MULTI_FACTOR">Custom Multi-Factor Combinator</option>
+                    </select>
+                </div>
+
+                <!-- MA Crossover Parameters -->
+                <div class="strategy-params" id="params-ma-crossover">
+                    <div class="control-group">
+                        <label for="ma-fast">Fast Moving Average Period</label>
+                        <input type="number" id="ma-fast" value="20" min="2" max="100">
+                    </div>
+                    <div class="control-group">
+                        <label for="ma-slow">Slow Moving Average Period</label>
+                        <input type="number" id="ma-slow" value="50" min="5" max="300">
+                    </div>
+                    <div class="control-group">
+                        <label for="ma-type">MA Core Calculation Type</label>
+                        <select id="ma-type">
+                            <option value="SMA">Simple Moving Average (SMA)</option>
+                            <option value="EMA">Exponential Moving Average (EMA)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- RSI Mean Reversion Parameters -->
+                <div class="strategy-params hidden" id="params-rsi-reversion">
+                    <div class="control-group">
+                        <label for="rsi-period">RSI Period</label>
+                        <input type="number" id="rsi-period" value="14" min="2" max="50">
+                    </div>
+                    <div class="control-group">
+                        <label for="rsi-oversold">Oversold Bound (Buy)</label>
+                        <input type="number" id="rsi-oversold" value="30" min="5" max="50">
+                    </div>
+                    <div class="control-group">
+                        <label for="rsi-overbought">Overbought Bound (Sell)</label>
+                        <input type="number" id="rsi-overbought" value="70" min="50" max="95">
+                    </div>
+                </div>
+
+                <!-- Momentum ROC Parameters -->
+                <div class="strategy-params hidden" id="params-momentum-roc">
+                    <div class="control-group">
+                        <label for="mom-period">Momentum ROC Period</label>
+                        <input type="number" id="mom-period" value="10" min="1" max="100">
+                    </div>
+                    <div class="control-group">
+                        <label for="mom-threshold">ROC Momentum Threshold (%)</label>
+                        <input type="number" id="mom-threshold" value="0" step="0.1">
+                    </div>
+                </div>
+
+                <!-- Multi-Factor Parameters -->
+                <div class="strategy-params hidden" id="params-multi-factor">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="mf-ma-cross" checked>
+                        <label for="mf-ma-cross">Include MA Crossover Filter</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="mf-rsi" checked>
+                        <label for="mf-rsi">Include RSI Boundary Filter</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="mf-mom">
+                        <label for="mf-mom">Include Momentum ROC Filter</label>
+                    </div>
+                    <div class="control-group">
+                        <label for="mf-logic">Logical Combinator Gate</label>
+                        <select id="mf-logic">
+                            <option value="AND">Logical AND (All Checked Filters Must Match)</option>
+                            <option value="OR">Logical OR (Any Checked Filter May Match)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Volatility Regime Filter Toggle -->
+                <div class="checkbox-group margin-top-sm">
+                    <input type="checkbox" id="use-regime-filter">
+                    <label for="use-regime-filter">Filter Trades via Volatility Regime</label>
+                </div>
+                <div class="control-group hidden" id="regime-filter-options">
+                    <label for="regime-filter-type">Trade Execution Condition</label>
+                    <select id="regime-filter-type">
+                        <option value="LOW_VOL">Execute only in Low Volatility regimes</option>
+                        <option value="HIGH_VOL">Execute only in High Volatility regimes</option>
+                    </select>
+                </div>
+            </section>
+
+            <button class="primary-btn btn-block" id="btn-run-backtest">Execute Backtest Model</button>
+        </aside>
+
+        <!-- Main Workspace Area -->
+        <main class="research-viewport">
+            <nav class="viewport-tabs">
+                <button class="tab-btn active" data-tab="workspace">Research Workspace</button>
+                <button class="tab-btn" data-tab="out-of-sample">Out-of-Sample Validation</button>
+                <button class="tab-btn" data-tab="walk-forward">Sensitivity & Walk-Forward</button>
+                <button class="tab-btn" data-tab="risk-regime">Risk & Regime Analysis</button>
+                <button class="tab-btn" data-tab="trade-ledger">System Trade Log</button>
+            </nav>
+
+            <div class="tab-content active" id="tab-workspace">
+                <div class="grid-layout cols-4 margin-bottom-md">
+                    <div class="metric-card">
+                        <div class="metric-label">Annualized Return (CAGR)</div>
+                        <div class="metric-value font-mono" id="metric-cagr">--%</div>
+                        <div class="metric-comparison" id="cagr-benchmark-comp">vs. Benchmark: --%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Risk-Adjusted Sharpe Ratio</div>
+                        <div class="metric-value font-mono" id="metric-sharpe">--</div>
+                        <div class="metric-comparison" id="sharpe-benchmark-comp">Benchmark: --</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Downside Sortino Ratio</div>
+                        <div class="metric-value font-mono" id="metric-sortino">--</div>
+                        <div class="metric-comparison" id="sortino-vol-comp">Ann. Volatility: --%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Maximum Portfolio Drawdown</div>
+                        <div class="metric-value font-mono" id="metric-maxdd">--%</div>
+                        <div class="metric-comparison" id="maxdd-duration-comp">MaxDD Duration: -- days</div>
+                    </div>
+                </div>
+
+                <div class="grid-layout cols-2 margin-bottom-md">
+                    <div class="metric-card padding-sm">
+                        <div class="metric-label">Alpha (Benchmark-Adjusted Excess)</div>
+                        <div class="metric-value font-mono text-sm" id="metric-alpha">--%</div>
+                    </div>
+                    <div class="metric-card padding-sm">
+                        <div class="metric-label">Systemic Market Beta (Covariance)</div>
+                        <div class="metric-value font-mono text-sm" id="metric-beta">--</div>
+                    </div>
+                </div>
+
+                <div class="chart-container-wrapper margin-bottom-md">
+                    <div class="chart-header">
+                        <h4>Price Signal Execution & Indicator Viewport</h4>
+                        <div class="chart-legend">
+                            <span class="legend-item"><span class="legend-color green"></span>Buy (Long) Signal</span>
+                            <span class="legend-item"><span class="legend-color red"></span>Exit Position</span>
+                        </div>
+                    </div>
+                    <!-- Main Candlestick Chart Pane -->
+                    <div id="price-chart-pane" class="chart-pane"></div>
+                    <!-- Indicator Subplot Pane -->
+                    <div id="indicator-chart-pane" class="chart-pane margin-top-sm"></div>
+                </div>
+
+                <div class="chart-container-wrapper">
+                    <div class="chart-header">
+                        <h4>Benchmark-Relative Cumulative Performance Timeline</h4>
+                    </div>
+                    <!-- Performance Comparison Curve -->
+                    <div id="equity-chart-wrapper" style="position: relative; height: 350px; width: 100%;">
+                        <canvas id="equity-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-out-of-sample">
+                <div class="section-desc margin-bottom-md">
+                    <h3>In-Sample vs. Out-of-Sample Performance Comparison</h3>
+                    <p class="text-muted text-sm">Evaluates temporal robustness by testing strategy parameters optimized in-sample (first <span class="is-percentage-label">70</span>%) against an out-of-sample window (<span class="oos-percentage-label">30</span>%). Backtest performance decay signals overfitting risk.</p>
+                </div>
+
+                <div class="grid-layout cols-2 margin-bottom-md">
+                    <div class="analytical-table-card">
+                        <h4>In-Sample Statistics (IS)</h4>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th class="text-right">Strategy Value</th>
+                                    <th class="text-right">Benchmark (B&H)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="is-metrics-table">
+                                <tr><td>Annualized CAGR</td><td class="text-right font-mono" id="is-cagr">--%</td><td class="text-right font-mono" id="is-bench-cagr">--%</td></tr>
+                                <tr><td>Annualized Volatility</td><td class="text-right font-mono" id="is-vol">--%</td><td class="text-right font-mono" id="is-bench-vol">--%</td></tr>
+                                <tr><td>Sharpe Ratio</td><td class="text-right font-mono" id="is-sharpe">--</td><td class="text-right font-mono" id="is-bench-sharpe">--</td></tr>
+                                <tr><td>Maximum Drawdown</td><td class="text-right font-mono" id="is-maxdd">--%</td><td class="text-right font-mono" id="is-bench-maxdd">--%</td></tr>
+                                <tr><td>Win Rate (Trades)</td><td class="text-right font-mono" id="is-winrate">--%</td><td class="text-right font-mono">--</td></tr>
+                                <tr><td>Profit Factor</td><td class="text-right font-mono" id="is-pf">--</td><td class="text-right font-mono">--</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="analytical-table-card">
+                        <h4>Out-of-Sample Statistics (OOS)</h4>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th class="text-right">Strategy Value</th>
+                                    <th class="text-right">Benchmark (B&H)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="oos-metrics-table">
+                                <tr><td>Annualized CAGR</td><td class="text-right font-mono text-cyan" id="oos-cagr">--%</td><td class="text-right font-mono" id="oos-bench-cagr">--%</td></tr>
+                                <tr><td>Annualized Volatility</td><td class="text-right font-mono" id="oos-vol">--%</td><td class="text-right font-mono" id="oos-bench-vol">--%</td></tr>
+                                <tr><td>Sharpe Ratio</td><td class="text-right font-mono text-cyan" id="oos-sharpe">--</td><td class="text-right font-mono" id="oos-bench-sharpe">--</td></tr>
+                                <tr><td>Maximum Drawdown</td><td class="text-right font-mono" id="oos-maxdd">--%</td><td class="text-right font-mono" id="oos-bench-maxdd">--%</td></tr>
+                                <tr><td>Win Rate (Trades)</td><td class="text-right font-mono" id="oos-winrate">--%</td><td class="text-right font-mono">--</td></tr>
+                                <tr><td>Profit Factor</td><td class="text-right font-mono" id="oos-pf">--</td><td class="text-right font-mono">--</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="chart-container-wrapper">
+                    <div class="chart-header">
+                        <h4>Partitioned Equity Growth Performance Timeline</h4>
+                    </div>
+                    <div id="oos-chart-wrapper" style="position: relative; height: 400px; width: 100%;">
+                        <canvas id="oos-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-walk-forward">
+                <div class="grid-layout cols-3 gap-md margin-bottom-md">
+                    <div class="control-sidebar-embed col-span-1">
+                        <h3>Parameter Optimization Sweeps</h3>
+                        <div class="control-group">
+                            <label for="sweep-param-x">Parameter X Axis (Fast MA / RSI Period)</label>
+                            <select id="sweep-param-x">
+                                <option value="fast_ma">Fast Moving Average (5 to 45)</option>
+                                <option value="rsi_period">RSI Calculation Window (5 to 25)</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="sweep-param-y">Parameter Y Axis (Slow MA / RSI Level)</label>
+                            <select id="sweep-param-y">
+                                <option value="slow_ma">Slow Moving Average (30 to 180)</option>
+                                <option value="rsi_oversold">RSI Oversold Level (15 to 45)</option>
+                            </select>
+                        </div>
+                        <button class="primary-btn btn-block" id="btn-run-optimization">Run Sensitivity Grid Search</button>
+                    </div>
+
+                    <div class="chart-container-wrapper col-span-2">
+                        <div class="chart-header">
+                            <h4>Parameter-Performance Sensitivity Map (Sharpe Ratio Grid)</h4>
+                        </div>
+                        <div id="heatmap-chart-wrapper" style="position: relative; height: 320px; width: 100%;">
+                            <canvas id="heatmap-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-layout cols-3 gap-md">
+                    <div class="control-sidebar-embed col-span-1">
+                        <h3>Walk-Forward Optimizations</h3>
+                        <div class="control-group">
+                            <label for="wfo-train-years">WFO Training window (days)</label>
+                            <input type="number" id="wfo-train-days" value="252" min="100" max="1000">
+                        </div>
+                        <div class="control-group">
+                            <label for="wfo-test-years">WFO Forward Test window (days)</label>
+                            <input type="number" id="wfo-test-days" value="63" min="20" max="250">
+                        </div>
+                        <button class="secondary-btn btn-block" id="btn-run-wfo">Execute Walk-Forward Test</button>
+                    </div>
+
+                    <div class="chart-container-wrapper col-span-2">
+                        <div class="chart-header">
+                            <h4>Walk-Forward Rolling Equity Curve (Regime Adaptive Parameters)</h4>
+                        </div>
+                        <div id="wfo-chart-wrapper" style="position: relative; height: 320px; width: 100%;">
+                            <canvas id="wfo-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-risk-regime">
+                <div class="grid-layout cols-2 gap-md margin-bottom-md">
+                    <div class="analytical-table-card">
+                        <h4>Market Regime Performance Segmentation</h4>
+                        <p class="text-muted text-xs margin-bottom-sm">Evaluates signal robustness and temporal consistency across distinct market environments.</p>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Regime Classification</th>
+                                    <th class="text-right">Win Rate</th>
+                                    <th class="text-right">Profit Factor</th>
+                                    <th class="text-right">Mean Trade P&L</th>
+                                </tr>
+                            </thead>
+                            <tbody id="regime-table-body">
+                                <tr><td>Bullish Trend / Low Volatility</td><td class="text-right font-mono" id="regime-bull-low-win">--%</td><td class="text-right font-mono" id="regime-bull-low-pf">--</td><td class="text-right font-mono" id="regime-bull-low-pnl">--%</td></tr>
+                                <tr><td>Bullish Trend / High Volatility</td><td class="text-right font-mono" id="regime-bull-high-win">--%</td><td class="text-right font-mono" id="regime-bull-high-pf">--</td><td class="text-right font-mono" id="regime-bull-high-pnl">--%</td></tr>
+                                <tr><td>Bearish Trend / Low Volatility</td><td class="text-right font-mono" id="regime-bear-low-win">--%</td><td class="text-right font-mono" id="regime-bear-low-pf">--</td><td class="text-right font-mono" id="regime-bear-low-pnl">--%</td></tr>
+                                <tr><td>Bearish Trend / High Volatility</td><td class="text-right font-mono" id="regime-bear-high-win">--%</td><td class="text-right font-mono" id="regime-bear-high-pf">--</td><td class="text-right font-mono" id="regime-bear-high-pnl">--%</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="analytical-table-card">
+                        <h4>Stochastic Risk Profile (100-Path Monte Carlo)</h4>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Tail Risk Variable</th>
+                                    <th class="text-right">Statistical Value</th>
+                                    <th>Interpretation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Median Simulated Return</td><td class="text-right font-mono" id="mc-median">--%</td><td>50th percentile of forward equity paths</td></tr>
+                                <tr><td>95th Percentile Outperformance</td><td class="text-right font-mono" id="mc-high">--%</td><td>Optimistic forward estimation bound</td></tr>
+                                <tr><td>5th Percentile Underperformance</td><td class="text-right font-mono text-red" id="mc-low">--%</td><td>Conservative downside growth limit</td></tr>
+                                <tr><td>Probability of Ruin (Drawdown &gt; 25%)</td><td class="text-right font-mono text-red" id="mc-ruin">--%</td><td>Probability of extreme equity drawdown</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="chart-container-wrapper">
+                    <div class="chart-header">
+                        <h4>Percentile-Based Forward Equity Distribution Bands</h4>
+                    </div>
+                    <div id="mc-chart-wrapper" style="position: relative; height: 380px; width: 100%;">
+                        <canvas id="mc-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-trade-ledger">
+                <div class="section-desc margin-bottom-md flex-row justify-between align-center">
+                    <div>
+                        <h3>System Trading Record Ledger</h3>
+                        <p class="text-muted text-sm">Full listing of historical transaction records generated by the deterministic strategy logic.</p>
+                    </div>
+                    <div class="flex-row gap-sm">
+                        <button class="secondary-btn" id="btn-export-csv">Export Ledger (CSV)</button>
+                        <button class="secondary-btn" id="btn-export-json">Export Ledger (JSON)</button>
+                    </div>
+                </div>
+
+                <div class="table-scroll-container">
+                    <table class="data-table" id="trade-ledger-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Asset Class</th>
+                                <th>Execution Type</th>
+                                <th>Entry Date</th>
+                                <th>Exit Date</th>
+                                <th class="text-right">Entry Price ($)</th>
+                                <th class="text-right">Exit Price ($)</th>
+                                <th class="text-right">Volume</th>
+                                <th class="text-right">Trade P&L ($)</th>
+                                <th class="text-right">Return (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledger-table-body">
+                            <tr><td colspan="10" class="text-center text-muted">No trade records generated. Execute a strategy backtest.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Script references -->
+    <script type="module" src="js/data.js"></script>
+    <script type="module" src="js/engine.js"></script>
+    <script type="module" src="js/charts.js"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "name": "quantitative-strategy-research-platform",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Systematic Quantitative Strategy Research & Backtesting Platform",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "quantitative",
+    "finance",
+    "backtest",
+    "research",
+    "monte-carlo",
+    "walk-forward"
+  ],
+  "author": "Quantitative Research Trainee",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
