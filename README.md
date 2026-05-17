@@ -2,8 +2,6 @@
 ## Quantitative Strategy Research & Portfolio Management Workstation
 
 **Author:** Nagachinmay KN (`chinmaynataraj@gmail.com`)  
-**Target Profile:** Quantitative Research & Portfolio Strategies Trainee  
-**Target Institution:** D+A Strategies, Dubai (UAE)  
 **Live Production Workstation:** [https://quantitative-trading-engine-kohl.vercel.app/](https://quantitative-trading-engine-kohl.vercel.app/)
 
 ---
