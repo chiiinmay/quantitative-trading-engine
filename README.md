@@ -3,6 +3,22 @@
 
 **Author:** Nagachinmay KN (`chinmaynataraj@gmail.com`)  
 **Live Production Workstation:** [https://quantitative-trading-engine-kohl.vercel.app/](https://quantitative-trading-engine-kohl.vercel.app/)
+# QSR&B: Systematic Strategy Research & Backtesting Platform
+
+![Vercel](https://img.shields.io/badge/Deployed-Vercel-black?logo=vercel)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Vite](https://img.shields.io/badge/Built%20With-Vite-646CFF?logo=vite)
+![JavaScript](https://img.shields.io/badge/Language-JavaScript-F7DF1E?logo=javascript&logoColor=black)
+
+# QSR&B: Systematic Strategy Research & Backtesting Platform
+
+[![Vercel](https://img.shields.io/badge/Live-Vercel-black?logo=vercel)](https://quantitative-trading-engine-kohl.vercel.app/)
+
+![License](https://img.shields.io/badge/License-MIT-green)
+
+![Vite](https://img.shields.io/badge/Built%20With-Vite-646CFF?logo=vite)
+
+![JavaScript](https://img.shields.io/badge/Language-JavaScript-F7DF1E?logo=javascript&logoColor=black)
 
 ---
 
